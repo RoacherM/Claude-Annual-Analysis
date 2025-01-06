@@ -38,10 +38,14 @@
 1. 环境配置
 ```bash
 # 克隆项目
-git clone [your-repo-url]
+git clone https://github.com/RoacherM/Claude-Annual-Analysis.git
 
 # 安装依赖
 pip install -r requirements.txt
+
+# 将Claude数据导出到data文件夹
+
+从 https://claude.ai/settings/account 下载个人历史数据，保存到data文件夹
 ```
 
 2. 配置环境变量
@@ -54,7 +58,7 @@ openai_model_name="YOUR-API-MODEL-NAME"
 
 3. 运行分析
 ```bash
-python main.py
+python main.py # 生成的结果保存在out文件夹
 ```
 
 ### 前端配置

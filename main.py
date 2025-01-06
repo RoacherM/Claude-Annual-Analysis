@@ -21,6 +21,9 @@ from utils import load_chat_data, save_result
 
 def main():
 
+    if not os.path.exists("./out"):
+        os.makedirs("./out", exist_ok=True)
+
     chat_data = load_chat_data("./data/conversations.json")
 
     analyzer = ChatAnalyzer(chat_data)
