@@ -1,0 +1,119 @@
+{
+    "-1": "None",
+    "0": {
+        "cluster": "Mathematical conversions, comparisons, and calculations across various contexts.",
+        "nums": 11
+    },
+    "1": {
+        "cluster": "Text processing, optimization, and technical troubleshooting in various contexts.",
+        "nums": 122
+    },
+    "2": {
+        "cluster": "Comparing numerical values (e.g., 9.11 vs. 9.8, 3.11 vs. 3.9).",
+        "nums": 5
+    },
+    "3": {
+        "cluster": "Optimizing conversational AI and chat interaction management.",
+        "nums": 4
+    },
+    "4": {
+        "cluster": "Troubleshooting and resolving software development and environment configuration issues.",
+        "nums": 18
+    },
+    "5": {
+        "cluster": "Literary analysis, poetic themes, and cultural commentary.",
+        "nums": 10
+    },
+    "6": {
+        "cluster": "Software development, code analysis, and user interface design topics.",
+        "nums": 9
+    },
+    "7": {
+        "cluster": "Game development, gaming culture, and game-related guides and humor.",
+        "nums": 18
+    },
+    "8": {
+        "cluster": "Development and optimization of AI assistants and related technologies.",
+        "nums": 18
+    },
+    "9": {
+        "cluster": "Python programming, JSON handling, and system troubleshooting techniques.",
+        "nums": 39
+    },
+    "10": {
+        "cluster": "Arts, culture, and technical troubleshooting in various contexts.",
+        "nums": 24
+    },
+    "11": {
+        "cluster": "Optimizing and resolving issues in API and asynchronous communication systems.",
+        "nums": 30
+    },
+    "12": {
+        "cluster": "\"Optimizing sensitive word filtering in text streams.\"",
+        "nums": 5
+    },
+    "13": {
+        "cluster": "Accessing and troubleshooting PDF research papers via Sci-Hub and related tools.",
+        "nums": 25
+    },
+    "14": {
+        "cluster": "Friendly interactions, greetings, and offering or requesting assistance.",
+        "nums": 6
+    },
+    "15": {
+        "cluster": "\"Data analysis techniques, optimization, and performance in computing.\"",
+        "nums": 6
+    },
+    "16": {
+        "cluster": "\"Database, paper processing, and API optimization in research workflows.\"",
+        "nums": 10
+    },
+    "17": {
+        "cluster": "编程、算法、字符串处理和语言翻译相关话题",
+        "nums": 17
+    },
+    "18": {
+        "cluster": "Art, portraits, creativity, and human experiences in diverse contexts.",
+        "nums": 12
+    },
+    "19": {
+        "cluster": "Financial analysis, risk assessment, and investment strategies.",
+        "nums": 19
+    },
+    "20": {
+        "cluster": "\"Technology, data services, and political analysis topics.\"",
+        "nums": 6
+    },
+    "21": {
+        "cluster": "Fiscal policy, taxation, and economic optimization strategies.",
+        "nums": 3
+    },
+    "22": {
+        "cluster": "Git version control operations and conflict resolution techniques.",
+        "nums": 8
+    },
+    "23": {
+        "cluster": "Elasticsearch optimization, data handling, and paper search improvements.",
+        "nums": 31
+    },
+    "24": {
+        "cluster": "Citation handling, formatting, and system optimization in academic contexts.",
+        "nums": 9
+    },
+    "25": {
+        "cluster": "Mathematical puzzles, games, and problem-solving challenges.",
+        "nums": 9
+    },
+    "26": {
+        "cluster": "Software tools, cryptocurrency conversion, and academic preparation in the US.",
+        "nums": 3
+    },
+    "27": {
+        "cluster": "\"Prompt design and evaluation for effective communication and insights.\"",
+        "nums": 3
+    },
+    "28": {
+        "cluster": "Technical troubleshooting and household maintenance tips.",
+        "nums": 3
+    }
+}
