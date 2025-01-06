@@ -9,6 +9,9 @@
 
 一个用于分析Claude聊天记录的工具，支持token使用分析、对话模式分析和主题聚类。
 
+### 生成结果
+![Clustering Result](/out/result.png)
+
 ## 功能特点
 
 ### 1. Token使用分析
@@ -29,6 +32,8 @@
 - 生成主题摘要报告
 
 ## 快速开始
+
+### 后端配置
 
 1. 环境配置
 ```bash
@@ -52,6 +57,19 @@ openai_model_name="YOUR-API-MODEL-NAME"
 python main.py
 ```
 
+### 前端配置
+
+1. 安装Node.js依赖
+```bash
+cd dashboard
+npm install
+```
+
+2. 运行开发服务器
+```bash
+npm run dev
+```
+
 ## 项目结构
 
 - `main.py`: 主程序入口
@@ -62,6 +80,7 @@ python main.py
 
 ## 技术栈
 
+### 后端
 - Python 3.8+
 - OpenAI API
 - Sentence Transformers
@@ -69,17 +88,62 @@ python main.py
 - UMAP
 - DBSCAN
 - Plotly
-- Next.js (Dashboard)
+- Pandas
+- NumPy
 
-# token 指数，按照日期统计每日消耗的token数目，生成对应的统计图表
-- 平均对话时长/来回次数
-- 最长的一次连续对话持续了多久,聊了什么
+### 前端 (Dashboard)
+- Next.js 15.1.3
+- React 19
+- TypeScript 5
+- Tailwind CSS 3.4
+- Recharts 2.15
+- Nivo Calendar 0.88
+- Date-fns 4.1
+- HTML2Canvas 1.4
 
-# 使用场景分析
-- 工作/学习/生活各场景的使用比例
-- 在一天中的什么时段对话最多
-- 季节性的使用特点（春、夏、秋、冬）
+## 依赖版本
 
-# 主题聚类，基于text-clustering项目完成，支持聚类结果可视化
-- 探讨最多的知识领域有哪些
-- 一段文艺的，总结性结尾
+### Python 依赖
+```
+python-dotenv==1.0.1
+openai==1.54.3
+pandas>=2.2.3
+numpy==1.26.4
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.0
+umap-learn>=0.5.0
+scikit-learn>=1.5.2
+plotly>=5.24.1
+rich>=10.0.0
+tqdm>=4.62.0
+matplotlib>=3.4.0
+```
+
+### NPM 依赖
+```json
+{
+  "dependencies": {
+    "@nivo/calendar": "^0.88.0",
+    "@types/papaparse": "^5.3.15",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "html2canvas": "^1.4.1",
+    "next": "15.1.3",
+    "papaparse": "^5.4.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^2.15.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@shadcn/ui": "^0.0.4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.1.3",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
