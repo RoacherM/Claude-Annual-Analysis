@@ -25,3 +25,5 @@ ENV/
 .DS_Store
 node_modules/
 .next/
+data-2024-12-31-09-30-30/
+data/
