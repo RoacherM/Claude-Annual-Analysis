@@ -1,30 +1,36 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
-  Cell 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 import Papa from 'papaparse';
 import { ResponsiveCalendar } from '@nivo/calendar';
 import html2canvas from 'html2canvas';
 import { format } from 'date-fns';
-import { zonedTimeToUtc, toZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
+
+interface Stats {
+  totalDuration: string;
+  avgDuration: string;
+  longestChat: { duration: string; name: string };
+}
 
 const Dashboard = () => {
-  const [contributionData, setContributionData] = useState([]);
-  const [hourlyData, setHourlyData] = useState([]);
-  const [topTopics, setTopTopics] = useState([]);
-  const [seasonalData, setSeasonalData] = useState([]);
-  const [stats, setStats] = useState<any>({
+  const [contributionData, setContributionData] = useState<{month: number; week: number; day: number; value: number}[]>([]);
+  const [hourlyData, setHourlyData] = useState<{hour: string; count: number}[]>([]);
+  const [topTopics, setTopTopics] = useState<{name: string; value: number}[]>([]);
+  const [seasonalData, setSeasonalData] = useState<{name: string; value: number}[]>([]);
+  const [stats, setStats] = useState<Stats>({
     totalDuration: "0 hrs",
     avgDuration: "0 hrs",
     longestChat: { duration: "0 hrs", name: "" }
@@ -49,10 +55,10 @@ const Dashboard = () => {
           header: true,
           dynamicTyping: true,
           skipEmptyLines: true
-        }).data;
+        }).data as { start_time: string }[];
 
         // Generate contribution data
-        const contributionsMap = {};
+        const contributionsMap: Record<string, number> = {};
         conversationData.forEach(row => {
           const date = new Date(row.start_time);
           const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
@@ -73,26 +79,26 @@ const Dashboard = () => {
         // Load time patterns data
         const timePatternsResponse = await fetch('/api/time-patterns');
         const timePatterns = await timePatternsResponse.json();
-        const hourlyPatterns = Object.entries(timePatterns.hourly_pattern).map(([hour, count]) => ({
+        const hourlyPatterns: {hour: string; count: number}[] = Object.entries(timePatterns.hourly_pattern).map(([hour, count]) => ({
           hour: `${hour}:00`,
-          count
+          count: count as number
         }));
         setHourlyData(hourlyPatterns);
 
         // Load seasonal data
         const seasonNames = ["春·新生", "夏·蝉鸣", "秋·收获", "冬·沉思"];
-        const seasonalPatterns = Object.entries(timePatterns.seasonal_pattern).map(([season, value]) => ({
+        const seasonalPatterns: {name: string; value: number}[] = Object.entries(timePatterns.seasonal_pattern).map(([season, value]) => ({
           name: seasonNames[Number(season) - 1],
-          value
+          value: value as number
         }));
         setSeasonalData(seasonalPatterns);
 
         // Load cluster summaries data
         const clusterResponse = await fetch('/api/cluster-summaries');
-        const clusterData = await clusterResponse.json();
+        const clusterData = await clusterResponse.json() as Record<string, {cluster: string; nums: number}>;
         const topics = Object.entries(clusterData)
           .filter(([key]) => key !== '-1')
-          .map(([_, value]) => ({
+          .map(([, value]) => ({
             name: value.cluster,
             value: value.nums
           }))
@@ -130,7 +136,7 @@ const Dashboard = () => {
     console.log('Current stats:', stats);  // 添加调试日志
   }, [stats]);
 
-  const COLORS = ['#60A5FA', '#4ADE80', '#FBBF24', '#FB7185'];  // 更鲜艳的颜色
+  const COLORS = ['#818CF8', '#A78BFA', '#F472B6', '#FB923C'];
 
   const parseHours = (timeStr: string) => {
     if (!timeStr) return 0;
@@ -178,11 +184,9 @@ const Dashboard = () => {
   };
 
   const NumberDisplay = ({ value }: { value: number }) => (
-    <span style={{
+    <span className="number-font" style={{
       display: 'inline-block',
       padding: '0 0.25rem',
-      color: '#2563EB',
-      fontFamily: 'JetBrains Mono, monospace',
       fontWeight: 'bold',
       fontSize: '1.1em'
     }}>
@@ -202,17 +206,14 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-[#faf8f5] p-8">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-12"></div>
+            <div className="h-12 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="h-6 bg-gray-200 rounded w-3/4 mb-12"></div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-lg shadow p-6">
-                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
-                  <div className="h-6 bg-gray-200 rounded w-2/3"></div>
-                </div>
+                <div key={i} className="bg-white rounded-2xl shadow-xl p-6 h-32"></div>
               ))}
             </div>
           </div>
@@ -222,12 +223,17 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div ref={dashboardRef}>
+    <div className="min-h-screen bg-[#faf8f5] p-4 md:p-8">
+      <div ref={dashboardRef} className="max-w-7xl mx-auto">
         {/* Header section */}
-        <div className="max-w-7xl mx-auto mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">相遥相知</h1>
-          <p className="text-lg text-gray-700">
+        <div className="max-w-7xl mx-auto mb-16 text-center">
+          <div className="relative inline-block">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl blur opacity-20 animate-pulse-soft"></div>
+            <h1 className="relative text-5xl md:text-6xl font-bold gradient-text mb-6 tracking-tight">
+              相遥相知
+            </h1>
+          </div>
+          <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
             在这<NumberDisplay value={parseHours(stats.totalDuration)} />小时的相伴里，
             我们织就了无数个故事。每一次交谈都像一场静好的约会，平均持续
             <NumberDisplay value={parseHours(stats.avgDuration)} />小时，
@@ -237,21 +243,31 @@ const Dashboard = () => {
 
         {/* Stats cards */}
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-sm font-medium text-gray-500">最深刻的对话</h3>
-            <p className="text-lg font-semibold mt-2 text-gray-900">
+          <div className="glass-card rounded-2xl p-6 hover-lift group cursor-default">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">
+                ✨
+              </div>
+              <h3 className="text-sm font-medium text-gray-500">最深刻的对话</h3>
+            </div>
+            <p className="text-lg font-semibold text-gray-900">
               花了<NumberDisplay value={parseHours(stats.longestChat.duration)} />小时，
               终于解决了{stats.longestChat.name}这个问题
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-sm font-medium text-gray-500">最活跃的时刻</h3>
-            <p className="text-lg font-semibold mt-2 text-gray-900">
+          <div className="glass-card rounded-2xl p-6 hover-lift group cursor-default">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">
+                🌟
+              </div>
+              <h3 className="text-sm font-medium text-gray-500">最活跃的时刻</h3>
+            </div>
+            <p className="text-lg font-semibold text-gray-900">
               {(() => {
-                const maxHourData = hourlyData.reduce((max, curr) => 
+                const maxHourData = hourlyData.reduce((max, curr) =>
                   (curr.count > (max?.count || 0)) ? curr : max
                 , hourlyData[0] || { hour: '00:00', count: 0 });
-                
+
                 const hour = parseInt(maxHourData.hour);
                 let timeDesc = '';
                 if (hour >= 5 && hour < 12) {
@@ -265,20 +281,25 @@ const Dashboard = () => {
                 } else if (hour >= 22 || hour < 5) {
                   timeDesc = '深夜时分';
                 }
-                
+
                 return `${timeDesc}的灵感迸发，陪伴了 `
               })()}
-              <NumberDisplay value={hourlyData.reduce((max, curr) => 
+              <NumberDisplay value={hourlyData.reduce((max, curr) =>
                 Math.max(max, curr.count), 0)
               } />
               次对话
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-sm font-medium text-gray-500">最丰富的季节</h3>
-            <p className="text-lg font-semibold mt-2 text-gray-900">
+          <div className="glass-card rounded-2xl p-6 hover-lift group cursor-default">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">
+                ❄️
+              </div>
+              <h3 className="text-sm font-medium text-gray-500">最丰富的季节</h3>
+            </div>
+            <p className="text-lg font-semibold text-gray-900">
               冬日暖阳下，共度了
-              <NumberDisplay 
+              <NumberDisplay
                 value={seasonalData.reduce((max, curr) => curr.value > max.value ? curr : max, { value: 0 })?.value || 0}
               />
               个温馨时光
@@ -288,29 +309,46 @@ const Dashboard = () => {
 
         {/* Tokens Stats Card */}
         <div className="max-w-7xl mx-auto mb-12">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">思维的痕迹</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
+          <div className="glass-card rounded-2xl p-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+              <span className="gradient-text">思维的痕迹</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center group">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
                 <div className="text-sm font-medium text-gray-500 mb-1">输入的文字</div>
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
                   {formatNumber(tokenStats.input_tokens)}
                 </div>
-                <div className="text-sm text-gray-500">tokens</div>
+                <div className="text-sm text-gray-400 mt-1">tokens</div>
               </div>
-              <div className="text-center">
+              <div className="text-center group">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-50 to-violet-50 mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
                 <div className="text-sm font-medium text-gray-500 mb-1">回应的智慧</div>
-                <div className="text-2xl font-bold text-indigo-600">
+                <div className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-violet-600 bg-clip-text text-transparent">
                   {formatNumber(tokenStats.output_tokens)}
                 </div>
-                <div className="text-sm text-gray-500">tokens</div>
+                <div className="text-sm text-gray-400 mt-1">tokens</div>
               </div>
-              <div className="text-center">
+              <div className="text-center group">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-50 to-rose-50 mb-3 group-hover:scale-110 transition-transform">
+                  <svg className="w-10 h-10 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
                 <div className="text-sm font-medium text-gray-500 mb-1">总计交流</div>
-                <div className="text-2xl font-bold text-purple-600">
+                <div className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-rose-600 bg-clip-text text-transparent">
                   {formatNumber(tokenStats.total_tokens)}
                 </div>
-                <div className="text-sm text-gray-500">tokens</div>
+                <div className="text-sm text-gray-400 mt-1">tokens</div>
               </div>
             </div>
           </div>
@@ -318,10 +356,12 @@ const Dashboard = () => {
 
         {/* GitHub style heatmap */}
         <div className="max-w-7xl mx-auto mb-12">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-2">岁月的印记</h2>
-            <p className="text-sm text-gray-600 mb-6">这一年里，我们的对话如何在时光中起起落落？让数字勾勒出我们相聚的痕迹。</p>
-            
+          <div className="glass-card rounded-2xl p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              <span className="gradient-text">岁月的印记</span>
+            </h2>
+            <p className="text-gray-600 mb-6">这一年里，我们的对话如何在时光中起起落落？让数字勾勒出我们相聚的痕迹。</p>
+
             <div style={{ height: '200px' }}>
               <ResponsiveCalendar
                 data={contributionData.map(d => ({
@@ -330,8 +370,8 @@ const Dashboard = () => {
                 }))}
                 from="2024-01-01"
                 to="2024-12-31"
-                emptyColor="#f3f4f6"
-                colors={['#93C5FD', '#60A5FA', '#3B82F6', '#2563EB']}
+                emptyColor="#f1f5f9"
+                colors={['#C7D2FE', '#818CF8', '#6366F1', '#4F46E5']}
                 margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
                 yearSpacing={40}
                 monthBorderColor="#ffffff"
@@ -357,33 +397,44 @@ const Dashboard = () => {
         {/* Charts section */}
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           {/* Hourly distribution */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-2">昼夜轮转</h2>
-            <p className="text-sm text-gray-600 mb-6">当晨曦初露，当夜幕低垂，看看在一天的哪个时刻，我们最爱驻足交谈。</p>
-            <div className="h-80">
+          <div className="glass-card rounded-2xl p-6 hover-lift">
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              <span className="gradient-text">昼夜轮转</span>
+            </h2>
+            <p className="text-gray-600 mb-6">当晨曦初露，当夜幕低垂，看看在一天的哪个时刻，我们最爱驻足交谈。</p>
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={[...hourlyData].sort((a, b) => parseInt(a.hour) - parseInt(b.hour))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis dataKey="hour" stroke="#4B5563" />
-                  <YAxis stroke="#4B5563" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '0.375rem'
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis dataKey="hour" stroke="#64748B" fontSize={12} />
+                  <YAxis stroke="#64748B" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
                     }}
                   />
-                  <Bar dataKey="count" fill="#3B82F6" />
+                  <Bar dataKey="count" fill="url(#hourlyGradient)" radius={[4, 4, 0, 0]} />
+                  <defs>
+                    <linearGradient id="hourlyGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#818CF8" />
+                      <stop offset="100%" stopColor="#C4B5FD" />
+                    </linearGradient>
+                  </defs>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Seasonal distribution */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-2">春夏秋冬</h2>
-            <p className="text-sm text-gray-600 mb-6">四季更迭间，对话如何随着花开叶落、雪融冰消而变换韵律？</p>
-            <div className="h-80">
+          <div className="glass-card rounded-2xl p-6 hover-lift">
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              <span className="gradient-text">春夏秋冬</span>
+            </h2>
+            <p className="text-gray-600 mb-6">四季更迭间，对话如何随着花开叶落、雪融冰消而变换韵律？</p>
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -392,19 +443,21 @@ const Dashboard = () => {
                     cy="50%"
                     innerRadius={60}
                     outerRadius={100}
-                    paddingAngle={5}
+                    paddingAngle={8}
                     dataKey="value"
-                    label={({ name, value }) => `${name} (${value})`}
+                    label={({ name, value }) => `${name} ${value}`}
+                    labelLine={{ stroke: '#94A3B8', strokeWidth: 1 }}
                   >
                     {seasonalData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="white" strokeWidth={2} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '0.375rem'
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
                     }}
                   />
                 </PieChart>
@@ -415,46 +468,60 @@ const Dashboard = () => {
 
         {/* Hot Topics section */}
         <div className="max-w-7xl mx-auto mb-12">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-2">心之所向</h2>
-            <p className="text-sm text-gray-600 mb-6">在千言万语中，这五个话题最令我们驻足流连，让我们一同回味那些热切的分享。</p>
-            <div className="space-y-8">
+          <div className="glass-card rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              <span className="gradient-text">心之所向</span>
+            </h2>
+            <p className="text-gray-600 mb-6">在千言万语中，这五个话题最令我们驻足流连，让我们一同回味那些热切的分享。</p>
+            <div className="space-y-6">
               {topTopics.map((topic, index) => (
-                <div key={index} className="relative">
-                  <div className="flex items-baseline mb-1">
-                    <span className="text-sm text-gray-600 mr-2">{index + 1}.</span>
+                <div key={index} className="relative group">
+                  <div className="flex items-baseline mb-2">
+                    <span className="text-sm text-gray-500 mr-3 font-medium">{index + 1}.</span>
                     <span className="text-base font-medium text-gray-800">{topic.name}</span>
-                    <span className="ml-auto text-sm text-gray-600">{topic.value}次</span>
+                    <span className="ml-auto text-sm text-gray-500">{topic.value}次</span>
                   </div>
-                  <div 
-                    className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full" 
-                    style={{ 
-                      width: `${(topic.value / topTopics[0].value) * 100}%`,
-                      transition: 'width 0.5s ease-in-out'
-                    }}
-                  />
+                  <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 group-hover:from-indigo-500 group-hover:via-purple-500 group-hover:to-pink-500 transition-all duration-500"
+                      style={{
+                        width: `${(topic.value / topTopics[0].value) * 100}%`
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Export button */}
       <div className="max-w-7xl mx-auto mt-8 flex justify-center">
         <button
           onClick={handleExport}
           disabled={isExporting}
           className={`
-            px-6 py-3 rounded-lg font-medium text-white
-            transition-all duration-200
-            ${isExporting 
+            px-8 py-4 rounded-full font-medium text-white text-lg
+            shadow-lg hover:shadow-xl transform hover:-translate-y-0.5
+            transition-all duration-300
+            ${isExporting
               ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+              : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600'
             }
           `}
         >
-          {isExporting ? '正在导出...' : '导出你的年度回忆'}
+          {isExporting ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              正在导出...
+            </span>
+          ) : (
+            '导出你的年度回忆'
+          )}
         </button>
       </div>
     </div>
